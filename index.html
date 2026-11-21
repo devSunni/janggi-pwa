@@ -260,17 +260,26 @@ bdE.addEventListener("click",e=>{if(Date.now()-sw<300)return;const q=e.target;if
 $("mv").addEventListener("click",e=>{const b=e.target.closest(".mb");if(b){const i=+b.dataset.i;vi=i>=H.length-1?null:i;sel=null;dests=[];hint=null;render();}});
 $("nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(b.dataset.k);});
 document.addEventListener("keydown",e=>{if(e.target.tagName==="SELECT")return;if(e.key==="ArrowLeft")go("p");else if(e.key==="ArrowRight")go("n");else if(e.key==="ArrowUp")go("f");else if(e.key==="ArrowDown")go("l");});
-$("nw").onclick=start;$("ovn").onclick=start;$("ovc").onclick=()=>$("ov").classList.remove("on");mode.onchange=start;$("tcs").onchange=start;
+const PREF_KEY="janggi-prefs-v1";
+function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify({mode:mode.value,lvl:lvl.value,tcs:$("tcs").value,learn,snd}));}catch(e){}}
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||"null");if(!p||typeof p!=="object")return;
+if(["c","h","2"].includes(p.mode))mode.value=p.mode;
+if(["1","2","3","4"].includes(String(p.lvl)))lvl.value=String(p.lvl);
+if(["0:0","60:0","180:2","300:0","600:0"].includes(p.tcs))$("tcs").value=p.tcs;
+if(typeof p.learn==="boolean"){learn=p.learn;$("ln").textContent="배우기 "+(learn?"켜짐":"꺼짐");$("ln").setAttribute("aria-pressed",learn);}
+if(typeof p.snd==="boolean"){snd=p.snd;$("sd").textContent="소리 "+(snd?"켜짐":"꺼짐");$("sd").setAttribute("aria-pressed",snd);}
+}catch(e){}}
+$("nw").onclick=start;$("ovn").onclick=start;$("ovc").onclick=()=>$("ov").classList.remove("on");mode.onchange=()=>{savePrefs();start();};lvl.onchange=savePrefs;$("tcs").onchange=()=>{savePrefs();start();};
 $("fl").onclick=()=>{flip=!flip;render();};
 $("ps").onclick=()=>{if(over||busy||!humanTurn()||vi!=null||inChk(cur()))return;play({pass:1});};
 $("un").onclick=()=>{if(busy||H.length<2)return;clearTimeout(tm);let n=mode.value==="2"?1:2;if(mode.value!=="2"&&over&&cur().t!==mode.value)n=1;
 while(n--&&H.length>1)H.pop();T={...H[H.length-1].T};lastT=Date.now();vi=null;sel=null;dests=[];over=false;res="";hint=null;warn=null;tip("");$("ov").classList.remove("on");render();if(!humanTurn())next(legal(cur()));};
 $("rs").onclick=()=>{if(over||busy||H.length<2)return;const c=mode.value==="2"?cur().t:mode.value;endBy(SN[c]+" 기권 · "+SN[c==="c"?"h":"c"]+" 승리");};
-$("ln").onclick=e=>{learn=!learn;e.target.textContent="배우기 "+(learn?"켜짐":"꺼짐");e.target.setAttribute("aria-pressed",learn);
+$("ln").onclick=e=>{learn=!learn;e.target.textContent="배우기 "+(learn?"켜짐":"꺼짐");e.target.setAttribute("aria-pressed",learn);savePrefs();
 tip(learn?"배우기 모드! 말을 누르면 움직이는 법을 알려주고, 위험한 수는 미리 경고해요. 막히면 힌트를 눌러보세요.":"");};
 $("ht").onclick=()=>{if(over||busy||!humanTurn()||vi!=null)return;const S=cur(),b=pick(S,2,1500);if(!b)return;
 hint=b;sel=null;dests=[];warn=null;sfx("hint");tip("💡 추천: "+pname(S.b[b.r][b.c])+" 말을 초록색 칸으로 옮겨 보세요"+(S.b[b.x][b.y]?" (상대 말을 잡아요!)":""));render();};
-$("sd").onclick=e=>{snd=!snd;e.target.textContent="소리 "+(snd?"켜짐":"꺼짐");e.target.setAttribute("aria-pressed",snd);if(snd)sfx("move");};
+$("sd").onclick=e=>{snd=!snd;e.target.textContent="소리 "+(snd?"켜짐":"꺼짐");e.target.setAttribute("aria-pressed",snd);savePrefs();if(snd)sfx("move");};
 function hm(h){document.documentElement.classList.toggle("hm",h);mt.textContent=h?"메뉴 보기":"메뉴 숨기기";mt.setAttribute("aria-expanded",!h);try{localStorage.setItem("janggi-hm",h?"1":"0");}catch(e){}}
 mt.onclick=()=>hm(!document.documentElement.classList.contains("hm"));
 try{if(localStorage.getItem("janggi-hm")==="1")hm(true);}catch(e){}
@@ -287,6 +296,7 @@ const t=e.type==="pointerup"?document.elementFromPoint(e.clientX,e.clientY):null
 if(t&&t.dataset&&t.dataset.r!==undefined){const r=+t.dataset.r,c=+t.dataset.c;if(dests.find(m=>m.x===r&&m.y===c)){ns=true;click(r,c);return;}}
 render();};
 bdE.addEventListener("pointerup",endDrag);bdE.addEventListener("pointercancel",endDrag);
+loadPrefs();
 start();
 </script>
 <script>if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>

@@ -1,5 +1,5 @@
 // 배포할 때마다 VERSION을 올리면 이전 캐시가 정리돼요.
-const VERSION = "janggi-v1";
+const VERSION = "janggi-v2";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
