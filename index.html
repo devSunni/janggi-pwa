@@ -17,6 +17,10 @@ button:hover,select:hover{border-color:var(--gold)}
 button:hover{color:var(--gold)}
 button:focus-visible,select:focus-visible{outline:2px solid #3b78c4;outline-offset:1px}
 #mt{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:12px;z-index:5;font-size:.8rem}
+#upd{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);z-index:25;display:none;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:var(--bg1);color:var(--ink);border:1px solid var(--gold);box-shadow:0 10px 26px rgba(0,0,0,.35);font-size:.86rem;max-width:94vw}
+#upd.on{display:flex}
+#upd button{padding:5px 12px;font-size:.8rem}
+#upd #updb{background:var(--gold);border-color:var(--gold);color:#1b1610;font-weight:600}
 #app{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
 #pn{display:contents}
 h1{order:-2;margin:6px 0 0;font-weight:600;font-size:1.9rem;letter-spacing:.2em;text-indent:.2em;text-align:center;background:linear-gradient(var(--g1),var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -103,13 +107,15 @@ h1 span{text-indent:0}
 <div id="nav"><button data-k="f" aria-label="처음">⏮</button><button data-k="p" aria-label="이전">◀</button><button data-k="n" aria-label="다음">▶</button><button data-k="l" aria-label="마지막">⏭</button></div>
 <div id="bar">
 <select id="mode" aria-label="상대"><option value="c">컴퓨터와 (내가 초 · 선공)</option><option value="h">컴퓨터와 (내가 한)</option><option value="2">둘이서</option></select>
+<select id="fmt" aria-label="상차림"><option value="EH_EH">상마상마 (외상)</option><option value="HE_HE">마상마상 (내상)</option><option value="EH_HE">상마마상 (왼상)</option><option value="HE_EH">마상상마 (오른상)</option></select>
 <select id="lvl" aria-label="난이도"><option value="1">입문</option><option value="2">쉬움</option><option value="3" selected>보통</option><option value="4">어려움 (느림)</option></select>
 <select id="tcs" aria-label="시간"><option value="0:0">시간 무제한</option><option value="60:0">1분</option><option value="180:2">3분+2초</option><option value="300:0">5분</option><option value="600:0">10분</option></select>
-<button id="nw">새 게임</button><button id="un">무르기</button><button id="fl">뒤집기</button><button id="ps">한수쉼</button><button id="rs">기권</button><button id="ht">힌트</button><button id="ln" aria-pressed="false">배우기 꺼짐</button><button id="sd" aria-pressed="true">소리 켜짐</button>
+<button id="nw">새 게임</button><button id="un">무르기</button><button id="fl">뒤집기</button><button id="ps">한수쉼</button><button id="rs">기권</button><button id="ht">힌트</button><button id="ln" aria-pressed="false">배우기 꺼짐</button><button id="sd" aria-pressed="true">소리 켜짐</button><button id="th">테마 자동</button>
 </div>
 </aside>
 </main>
 <div class="ov" id="ov"><div class="card"><h2 id="ovt"></h2><button id="ovn">새 게임</button> <button id="ovc">닫기</button></div></div>
+<div id="upd" role="status" aria-live="polite"><span>✨ 새 버전이 준비되었어요</span><button id="updb">업데이트</button><button id="updc" aria-label="닫기">✕</button></div>
 <script>
 const NM={K:"장",A:"사",E:"상",H:"마",R:"차",C:"포",S:"졸·병"},CH={c:{K:"楚",A:"士",E:"象",H:"馬",R:"車",C:"包",S:"卒"},h:{K:"漢",A:"士",E:"象",H:"馬",R:"車",C:"包",S:"兵"}};
 const V={K:0,A:300,E:300,H:500,R:1300,C:700,S:200},MV={K:0,A:3,E:3,H:5,R:13,C:7,S:2},CNT={R:2,C:2,H:2,E:2,A:2,S:5},CL={c:"#1d7a3f",h:"#b3261e"},SN={c:"초",h:"한"};
@@ -123,8 +129,10 @@ let H,vi,sel,dests,flip,over,busy,res,learn=false,hint=null,warn=null,tm,tt,snd=
 const cur=()=>H[H.length-1].s,idx=()=>vi==null?H.length-1:vi,humanTurn=()=>mode.value==="2"||cur().t===mode.value;
 const pname=p=>p[1]==="S"?(p[0]==="c"?"졸":"병"):NM[p[1]],sqn=(r,c)=>"abcdefghi"[c]+(10-r);
 const X=c=>34+(flip?8-c:c)*48,Y=r=>34+(flip?9-r:r)*48;
+const FMT_MAP={EH_EH:["R","E","H","A",null,"A","E","H","R"],HE_HE:["R","H","E","A",null,"A","H","E","R"],EH_HE:["R","E","H","A",null,"A","H","E","R"],HE_EH:["R","H","E","A",null,"A","E","H","R"]};
 function init(){const b=Array.from({length:10},()=>Array(9).fill(null));
-["R","E","H","A",null,"A","E","H","R"].forEach((t,c)=>{if(t){b[0][c]="h"+t;b[9][c]="c"+t;}});
+const fm=$("fmt"),row=FMT_MAP[fm&&fm.value]||FMT_MAP.EH_EH;
+row.forEach((t,c)=>{if(t){b[0][c]="h"+t;b[9][c]="c"+t;}});
 b[1][4]="hK";b[8][4]="cK";[1,7].forEach(c=>{b[2][c]="hC";b[7][c]="cC";});[0,2,4,6,8].forEach(c=>{b[3][c]="hS";b[6][c]="cS";});return{b,t:"c"};}
 function gen(b,r,c){const p=b[r][c],col=p[0],ty=p[1],out=[];
 const free=(x,y)=>ON(x,y)&&(!b[x][y]||b[x][y][0]!==col),add=(x,y)=>out.push({r,c,x,y});
@@ -177,7 +185,7 @@ H.push({s:n,m,t,T:{...T},q});vi=null;sel=null;dests=[];hint=null;warn=null;tip("
 if(learn&&q&&(mode.value==="2"||S.t===mode.value))tip(QT[q]);
 sfx(!ms.length&&chk?"end":chk?"chk":cap?"cap":"move");
 if(!ms.length){over=true;res=chk?SN[S.t]+" 승리 (외통)":"무승부 (둘 수 있는 수가 없어요)";}
-fx={m,slide:sl,mate:over&&chk};render();if(sl&&!RM){hold=Date.now()+260;setTimeout(()=>{hold=0;render();},270);}
+fx={m,slide:sl,mate:over&&chk};saveState();render();if(sl&&!RM){hold=Date.now()+260;setTimeout(()=>{hold=0;render();},270);}
 if(over)setTimeout(fin,chk&&!RM?1700:500);else next(ms);}
 function fin(){$("ovt").textContent=res;$("ov").classList.add("on");}
 function next(ms){if(over||!ms.length||humanTurn())return;busy=true;render();clearTimeout(tm);tm=setTimeout(aiMove,900+Math.random()*700);}
@@ -239,9 +247,9 @@ p.className="pt";p.style.cssText=`left:${x}px;top:${y}px;--tx:${Math.cos(a)*d}px
 bw.appendChild(p);setTimeout(()=>p.remove(),1500);}}}
 function go(k){const L=H.length-1,c=idx(),n=k==="f"?0:k==="p"?Math.max(0,c-1):k==="n"?c+1:L;vi=n>=L?null:n;sel=null;dests=[];hint=null;render();}
 function start(){clearTimeout(tm);const[a,b]=$("tcs").value.split(":");clk=+a>0;INC=+b*1000;T={c:+a*1000,h:+a*1000};lastT=Date.now();
-H=[{s:init(),m:null,t:"",T:{...T}}];vi=null;sel=null;dests=[];over=false;busy=false;res="";hint=null;warn=null;tip("");$("ov").classList.remove("on");flip=mode.value==="h";render();next(legal(cur()));}
+H=[{s:init(),m:null,t:"",T:{...T}}];vi=null;sel=null;dests=[];over=false;busy=false;res="";hint=null;warn=null;tip("");$("ov").classList.remove("on");flip=mode.value==="h";saveState();render();next(legal(cur()));}
 function fmt(ms){if(ms<20000)return(Math.max(0,ms)/1000).toFixed(1);const s=Math.ceil(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
-function endBy(txt){over=true;clearTimeout(tm);busy=false;res=txt;sfx("end");render();fin();}
+function endBy(txt){over=true;clearTimeout(tm);busy=false;res=txt;saveState();sfx("end");render();fin();}
 function tick(){const now=Date.now(),d=Math.min(now-lastT,500);lastT=now;if(!clk||over||H.length<2)return;const c=cur().t;T[c]-=d;
 if(T[c]<=0){T[c]=0;endBy(SN[c]+" 시간 초과 · "+SN[c==="c"?"h":"c"]+" 승리");return;}
 document.querySelectorAll(".ck").forEach(el=>el.textContent=fmt(T[el.dataset.c]));}
@@ -260,20 +268,37 @@ bdE.addEventListener("click",e=>{if(Date.now()-sw<300)return;const q=e.target;if
 $("mv").addEventListener("click",e=>{const b=e.target.closest(".mb");if(b){const i=+b.dataset.i;vi=i>=H.length-1?null:i;sel=null;dests=[];hint=null;render();}});
 $("nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(b.dataset.k);});
 document.addEventListener("keydown",e=>{if(e.target.tagName==="SELECT")return;if(e.key==="ArrowLeft")go("p");else if(e.key==="ArrowRight")go("n");else if(e.key==="ArrowUp")go("f");else if(e.key==="ArrowDown")go("l");});
-const PREF_KEY="janggi-prefs-v1";
-function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify({mode:mode.value,lvl:lvl.value,tcs:$("tcs").value,learn,snd}));}catch(e){}}
+const PREF_KEY="janggi-prefs-v1",STATE_KEY="janggi-state-v1";
+let theme="auto";
+function applyTheme(t){theme=["auto","light","dark"].includes(t)?t:"auto";
+if(theme==="auto"){if(document.documentElement.removeAttribute)document.documentElement.removeAttribute("data-theme");}
+else document.documentElement.setAttribute("data-theme",theme);
+$("th").textContent=theme==="light"?"테마 라이트":theme==="dark"?"테마 다크":"테마 자동";}
+function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify({mode:mode.value,fmt:$("fmt").value,lvl:lvl.value,tcs:$("tcs").value,learn,snd,theme}));}catch(e){}}
 function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||"null");if(!p||typeof p!=="object")return;
 if(["c","h","2"].includes(p.mode))mode.value=p.mode;
+if(FMT_MAP[p.fmt])$("fmt").value=p.fmt;
 if(["1","2","3","4"].includes(String(p.lvl)))lvl.value=String(p.lvl);
 if(["0:0","60:0","180:2","300:0","600:0"].includes(p.tcs))$("tcs").value=p.tcs;
 if(typeof p.learn==="boolean"){learn=p.learn;$("ln").textContent="배우기 "+(learn?"켜짐":"꺼짐");$("ln").setAttribute("aria-pressed",learn);}
 if(typeof p.snd==="boolean"){snd=p.snd;$("sd").textContent="소리 "+(snd?"켜짐":"꺼짐");$("sd").setAttribute("aria-pressed",snd);}
+if(p.theme)applyTheme(p.theme);
 }catch(e){}}
-$("nw").onclick=start;$("ovn").onclick=start;$("ovc").onclick=()=>$("ov").classList.remove("on");mode.onchange=()=>{savePrefs();start();};lvl.onchange=savePrefs;$("tcs").onchange=()=>{savePrefs();start();};
-$("fl").onclick=()=>{flip=!flip;render();};
+function saveState(){try{if(!H||!H.length)return;localStorage.setItem(STATE_KEY,JSON.stringify({v:1,H,T,INC,clk,flip,over,res}));}catch(e){}}
+function loadState(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY)||"null");
+if(!s||s.v!==1||!Array.isArray(s.H)||s.H.length<2||!s.H[s.H.length-1]?.s?.b)return false;
+H=s.H;const[a,b]=$("tcs").value.split(":");clk=typeof s.clk==="boolean"?s.clk:+a>0;INC=typeof s.INC==="number"?s.INC:+b*1000;
+T=(s.T&&typeof s.T.c==="number"&&typeof s.T.h==="number")?{c:Math.max(0,s.T.c),h:Math.max(0,s.T.h)}:{c:+a*1000,h:+a*1000};
+flip=typeof s.flip==="boolean"?s.flip:mode.value==="h";over=!!s.over;res=typeof s.res==="string"?s.res:"";
+vi=null;sel=null;dests=[];busy=false;hint=null;warn=null;lastT=Date.now();
+$("ov").classList.remove("on");tip(over?"":"💾 이전 대국을 이어서 불러왔어요.");render();if(!over)next(legal(cur()));return true;
+}catch(e){return false;}}
+$("th").onclick=()=>{const ord=["auto","light","dark"];applyTheme(ord[(ord.indexOf(theme)+1)%3]);savePrefs();};
+$("nw").onclick=start;$("ovn").onclick=start;$("ovc").onclick=()=>$("ov").classList.remove("on");mode.onchange=()=>{savePrefs();start();};$("fmt").onchange=()=>{savePrefs();start();};lvl.onchange=savePrefs;$("tcs").onchange=()=>{savePrefs();start();};
+$("fl").onclick=()=>{flip=!flip;saveState();render();};
 $("ps").onclick=()=>{if(over||busy||!humanTurn()||vi!=null||inChk(cur()))return;play({pass:1});};
 $("un").onclick=()=>{if(busy||H.length<2)return;clearTimeout(tm);let n=mode.value==="2"?1:2;if(mode.value!=="2"&&over&&cur().t!==mode.value)n=1;
-while(n--&&H.length>1)H.pop();T={...H[H.length-1].T};lastT=Date.now();vi=null;sel=null;dests=[];over=false;res="";hint=null;warn=null;tip("");$("ov").classList.remove("on");render();if(!humanTurn())next(legal(cur()));};
+while(n--&&H.length>1)H.pop();T={...H[H.length-1].T};lastT=Date.now();vi=null;sel=null;dests=[];over=false;res="";hint=null;warn=null;tip("");$("ov").classList.remove("on");saveState();render();if(!humanTurn())next(legal(cur()));};
 $("rs").onclick=()=>{if(over||busy||H.length<2)return;const c=mode.value==="2"?cur().t:mode.value;endBy(SN[c]+" 기권 · "+SN[c==="c"?"h":"c"]+" 승리");};
 $("ln").onclick=e=>{learn=!learn;e.target.textContent="배우기 "+(learn?"켜짐":"꺼짐");e.target.setAttribute("aria-pressed",learn);savePrefs();
 tip(learn?"배우기 모드! 말을 누르면 움직이는 법을 알려주고, 위험한 수는 미리 경고해요. 막히면 힌트를 눌러보세요.":"");};
@@ -296,9 +321,25 @@ const t=e.type==="pointerup"?document.elementFromPoint(e.clientX,e.clientY):null
 if(t&&t.dataset&&t.dataset.r!==undefined){const r=+t.dataset.r,c=+t.dataset.c;if(dests.find(m=>m.x===r&&m.y===c)){ns=true;click(r,c);return;}}
 render();};
 bdE.addEventListener("pointerup",endDrag);bdE.addEventListener("pointercancel",endDrag);
+if(typeof window!=="undefined"&&window.addEventListener)window.addEventListener("pagehide",saveState);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveState();else lastT=Date.now();});
 loadPrefs();
-start();
+if(!loadState())start();
 </script>
-<script>if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>
+if("serviceWorker"in navigator&&location.protocol!=="file:"){
+  let wsw=null,regRef=null,rel=false;
+  const ub=document.getElementById("upd"),showU=s=>{wsw=s;if(ub)ub.classList.add("on");};
+  const b1=document.getElementById("updb"),b2=document.getElementById("updc");
+  if(b1)b1.onclick=()=>{if(wsw){wsw.postMessage({type:"SKIP_WAITING"});ub.classList.remove("on");}};
+  if(b2)b2.onclick=()=>ub.classList.remove("on");
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(rel)return;rel=true;location.reload();});
+  addEventListener("load",()=>navigator.serviceWorker.register("sw.js").then(reg=>{
+    regRef=reg;if(reg.waiting&&navigator.serviceWorker.controller)showU(reg.waiting);
+    reg.addEventListener("updatefound",()=>{const nw=reg.installing;if(nw)nw.addEventListener("statechange",()=>{if(nw.state==="installed"&&navigator.serviceWorker.controller)showU(nw);});});
+  }).catch(()=>{}));
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&regRef)regRef.update().catch(()=>{});});
+}
+</script>
 </body>
 </html>

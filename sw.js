@@ -1,9 +1,12 @@
 // 배포할 때마다 VERSION을 올리면 이전 캐시가 정리돼요.
-const VERSION = "janggi-v2";
+const VERSION = "janggi-v3";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(ASSETS)));
+});
+self.addEventListener("message", e => {
+  if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", e => {
